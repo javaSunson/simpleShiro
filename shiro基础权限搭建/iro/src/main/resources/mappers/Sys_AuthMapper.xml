@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iro.dao.Sys_AuthMapper">
+    <select id="getAllAuths" resultType="map">
+       select auth_id as id,parent_id as pid,
+       auth_name,auth_desc,auth_code,auth_layer,auth_type,
+       orders,is_valid,auth_url
+       from sys_auth
+       order by auth_layer,orders
+    </select>
+    <select id="countAuth" resultType="int">
+      select count(*) from sys_auth;
+    </select>
+    <insert id="addAuth" parameterType="sys_Auth">
+        insert into sys_auth
+        (auth_name,auth_code,auth_desc,auth_layer,
+        auth_url,parent_id,orders,auth_type,is_valid)
+        values(#{auth_name},#{auth_code},#{auth_desc},
+        #{auth_layer},#{auth_url},#{parent_id},#{orders},
+        0,0)
+    </insert>
+    <update id="editAuth" parameterType="sys_Auth">
+        update sys_auth set
+        auth_name = #{auth_name},
+        auth_code = #{auth_code},
+        auth_desc = #{auth_desc},
+        auth_layer = #{auth_layer},
+        auth_type = #{auth_type},
+        orders = #{orders},
+        auth_url = #{auth_url},
+        parent_id = #{parent_id}
+        where auth_id = #{auth_id}
+    </update>
+</mapper>

@@ -1,0 +1,25 @@
+server:
+  servlet:
+    context-path: /iromanager
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    username: root
+    password: sun19950305
+    url: jdbc:mysql://47.106.69.227/irodocument?serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.jdbc.Driver
+    initialSize: 5
+    maxActive: 20
+  mvc:
+    static-path-pattern: /static/**
+  resources:
+    static-locations: ["classpath:/static/"]
+  thymeleaf:
+    cache: false
+  jpa:
+    show-sql: true
+mybatis:
+  type-aliases-package: com.iro.pojo
+  mapper-locations: classpath:/mappers/*.xml
+logging:
+  level: {"com.iro":"trace"}

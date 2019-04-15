@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iro.dao.SysMapper">
+    <select id="userLogin" parameterType="sys_User" resultType="sys_User">
+        select * from sys_user where username = #{username}
+    </select>
+    <select id="findUserByUsername" resultType="sys_User" parameterType="string">
+        select * from sys_user where username = #{username}
+    </select>
+    <select id="getAllAuths" resultType="sys_Auth">
+        select * from sys_auth
+        where auth_type = 0
+        and is_valid = 0
+        order by orders
+    </select>
+    <select id="getAllRolesByUserName" parameterType="string" resultType="sys_Role">
+        select r.role_id,r.role_name,r.role_desc,r.role_code
+        from sys_user u join sys_user_role ur
+        on(u.user_id = ur.user_id)
+        join sys_role r on (ur.role_id = r.role_id)
+        where u.username = #{username} and r.is_valid = 0
+        order by r.orders
+    </select>
+    <select id="getAllAuthByUserName" parameterType="string" resultType="sys_Auth">
+      select a.auth_id,a.auth_name,a.auth_desc,a.auth_code,
+      a.auth_layer,a.auth_url,a.is_valid
+      from sys_user u
+      join sys_user_role ur
+      on(u.user_id = ur.user_id)
+      join sys_role r on (ur.role_id = r.role_id)
+      join sys_role_auth ra on (r.role_id = ra.role_id)
+      join sys_auth a on (ra.auth_id = a.auth_id)
+      where u.username = #{username} and a.is_valid = 0
+      order by a.orders
+    </select>
+</mapper>

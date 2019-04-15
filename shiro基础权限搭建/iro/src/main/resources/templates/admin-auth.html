@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>tree-table</title>
+    <link rel="stylesheet" th:href="@{/static/assets/layui/css/layui.css}">
+    <link rel="stylesheet" th:href="@{/static/assets/common.css}"/>
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script th:src="@{/static/lib/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/static/js/xadmin.js}"></script>
+</head>
+<body>
+<div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a href="">后台</a>
+        <a href="">系统管理</a>
+        <a>
+          <cite>权限管理</cite></a>
+      </span>
+    <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+</div>
+<div style="width: 100%" class="layui-container layui-text">
+    <div class="layui-btn-group">
+        <button class="layui-btn" id="btn-expand">全部展开</button>
+        <button class="layui-btn" id="btn-fold">全部折叠</button>
+        <button class="layui-btn" id="btn-refresh">刷新表格</button>
+    </div>
+
+    <table width="100%" id="table1" class="layui-table" lay-filter="table1"></table>
+
+</div>
+<!-- 操作列 -->
+<script type="text/html" id="oper-col">
+
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">启用/禁用</a>
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-add layui-btn-xs" lay-event="add">添加下级</a>
+</script>
+
+<script th:src="@{/static/assets/layui/layui.js}"></script>
+<script th:inline="javascript">
+    var path = [[${#request.contextPath}]];
+</script>
+<script th:inline="none" type="text/javascript">
+    layui.config({
+        base: path+'/static/module/'
+    }).extend({
+        treetable: 'treetable-lay/treetable'
+    }).use(['layer', 'table', 'treetable'], function () {
+        var $ = layui.jquery;
+        var table = layui.table;
+        var layer = layui.layer;
+        var treetable = layui.treetable;
+
+        // 渲染表格
+        var renderTable = function () {
+            layer.load(2);
+            treetable.render({
+                treeColIndex: 1,
+                treeSpid: -1,
+                treeIdName: 'id',
+                treePidName: 'pid',
+                treeDefaultClose: true,
+                treeLinkage: false,
+                elem: '#table1',
+                // url: path+'/static/json/data.json',
+                url: path+'/getJsonAuths',
+                page: false,
+                cols: [[
+                    {type: 'numbers'},
+                    {field: 'auth_name',width:200,  title: "名称"},
+                    {field: 'id', width:70,title: '编号'},
+                    {field: 'auth_desc',width:120, title: '描述'},
+                    {field: 'auth_code',width:70, title: '编码'},
+                    {field: 'auth_layer',width:70, title: '层级'},
+                    {field: 'auth_url',width:150, title: 'url'},
+                    {field: 'orders', width:70,title: '排序'},
+                    {field: 'pid', width:100,title: '父编号'},
+                    {field: 'auth_type', width:70,title: '类型'},
+                    {field: 'is_valid', width:70,title: '有效'},
+                    {templet: '#oper-col', width:300,title: '操作'}
+
+                ]],
+                done: function () {
+                    layer.closeAll('loading');
+                }
+            });
+        };
+        renderTable();
+
+        $('#btn-expand').click(function () {
+            treetable.expandAll('#table1');
+        });
+
+        $('#btn-fold').click(function () {
+            treetable.foldAll('#table1');
+        });
+
+        $('#btn-refresh').click(function () {
+            renderTable();
+        });
+
+        //监听工具条
+        table.on('tool(table1)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+            if (layEvent === 'del') {
+                // layer.msg('启用' + data.id);
+                var valid = data.is_valid;
+                var auth_id = data.id;
+                if(valid == "启用"){
+                    layer.confirm('您确定禁用当前权限吗？', {
+                        skin: 'layui-layer-lan',
+                        btn: ['确定','返回'] //按钮
+                    }, function(){
+                        layer.msg('正在为您关闭', {icon: 1});
+                        $.ajax({
+                            url:path+"/auth_toggle",//开启或者关闭权限
+                            data:{"valid":valid,"auth_id":auth_id},
+                            dataType:"html",
+                            type:"post",
+                            success:function (data) {
+                                if(data == 'ok'){
+                                    layer.msg('操作成功!', {icon: 1});
+                                    // location.reload();
+                                    renderTable();
+                                }else{
+                                    layer.msg('操作失败!', {icon: 1});
+                                    // location.reload();
+                                    renderTable();
+                                }
+                            }
+                        });
+                    }, function(){
+                        layer.msg('操作已取消',   {icon: 2});
+                    });
+                }else{
+                    layer.confirm('您确定开启当前权限吗？', {
+                        skin: 'layui-layer-molv',
+                        btn: ['确定','返回'] //按钮
+                    }, function(){
+                        layer.msg('正在为您开启', {icon: 1});
+                        $.ajax({
+                            url:path+"/auth_toggle",//开启或者关闭权限
+                            data:{"valid":valid,"auth_id":auth_id},
+                            dataType:"html",
+                            type:"post",
+                            success:function (data) {
+                                if(data == 'ok'){
+                                    layer.msg('操作成功!', {icon: 1});
+                                    // location.reload();
+                                    renderTable();
+                                }else{
+                                    layer.msg('操作失败!', {icon: 1});
+                                    // location.reload();
+                                    renderTable();
+                                }
+                            }
+                        });
+                    }, function(){
+                        layer.msg('操作已取消',   {icon: 2});
+                    });
+                }
+
+
+            } else if (layEvent === 'edit') {
+                // 处理页面菜单和服务器参数不匹配
+                var type = data.auth_type;
+                if(type=="菜单"){
+                    type = 0;
+                }else{
+                    type = 1;
+                }
+                var url = data.auth_url;
+                if(url == null || url == undefined){
+                    url = '';
+                }
+                var param ='parent_id='+data.pid+'&auth_layer='+data.auth_layer
+                +'&id='+data.id+'&auth_name='+data.auth_name+'&auth_code='+data.auth_code+
+                        '&auth_desc='+data.auth_desc+'&orders='+data.orders+'&auth_url='+url
+                        +'&auth_type='+type;
+                x_admin_show('编辑权限',path+'/admin-authedit?'+param);
+                layer.msg('修改' + data.id);
+            }else if(layEvent === 'add'){
+                var parent_id = data.id;
+                var auth_layer = data.auth_layer+1;
+                x_admin_show('添加权限',path+'/admin-authedit?parent_id='+parent_id+'&auth_layer='+auth_layer);
+                layer.msg('添加子级' + data.id);
+            }
+        });
+    });
+</script>
+</body>
+</html>
